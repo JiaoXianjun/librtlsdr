@@ -72,8 +72,13 @@ sighandler(int signum)
 	return FALSE;
 }
 #else
-static void sighandler(int signum)
+static inline void sighandler(int signum)
 {
+	if (signum == SIGALRM) {
+		// printf("SIGALRM. Syncing ...\n");
+		rtlsdr_set_wait_for_trigger(dev, 1);
+		return;
+	}
 	fprintf(stderr, "Signal caught, exiting!\n");
 	do_exit = 1;
 	rtlsdr_cancel_async(dev);
@@ -194,6 +199,7 @@ int main(int argc, char **argv)
 	sigaction(SIGTERM, &sigact, NULL);
 	sigaction(SIGQUIT, &sigact, NULL);
 	sigaction(SIGPIPE, &sigact, NULL);
+	sigaction(SIGALRM, &sigact, NULL);
 #else
 	SetConsoleCtrlHandler( (PHANDLER_ROUTINE) sighandler, TRUE );
 #endif
@@ -229,6 +235,8 @@ int main(int argc, char **argv)
 
 	/* Reset endpoint before we start reading from it (mandatory) */
 	verbose_reset_buffer(dev);
+	
+	rtlsdr_set_wait_for_trigger(dev, 0);
 
 	if (sync_mode) {
 		fprintf(stderr, "Reading samples in sync mode...\n");

@@ -29,6 +29,8 @@ extern "C" {
 
 typedef struct rtlsdr_dev rtlsdr_dev_t;
 
+RTLSDR_API void rtlsdr_set_wait_for_trigger(rtlsdr_dev_t *dev, int flag);
+
 RTLSDR_API uint32_t rtlsdr_get_device_count(void);
 
 RTLSDR_API const char* rtlsdr_get_device_name(uint32_t index);

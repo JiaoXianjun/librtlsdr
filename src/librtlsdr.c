@@ -125,6 +125,7 @@ struct rtlsdr_dev {
 	int dev_lost;
 	int driver_active;
 	unsigned int xfer_errors;
+	volatile int wait_for_trigger;
 };
 
 void rtlsdr_set_gpio_bit(rtlsdr_dev_t *dev, uint8_t gpio, int val);
@@ -405,6 +406,11 @@ enum blocks {
 	IRB			= 5,
 	IICB			= 6,
 };
+
+void rtlsdr_set_wait_for_trigger(rtlsdr_dev_t *dev, int flag)
+{
+	dev->wait_for_trigger = flag;
+}
 
 int rtlsdr_read_array(rtlsdr_dev_t *dev, uint8_t block, uint16_t addr, uint8_t *array, uint8_t len)
 {
@@ -1881,6 +1887,8 @@ int rtlsdr_read_async(rtlsdr_dev_t *dev, rtlsdr_read_async_cb_t cb, void *ctx,
 
 	_rtlsdr_alloc_async_buffers(dev);
 
+	while(dev->wait_for_trigger == 0);
+	// printf("Start IQ capture ...\n");
 	for(i = 0; i < dev->xfer_buf_num; ++i) {
 		libusb_fill_bulk_transfer(dev->xfer[i],
 					  dev->devh,
